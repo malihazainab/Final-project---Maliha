@@ -1,33 +1,976 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>My Website!</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gimkit Gold MiningTrivia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+
+        body, html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #1d1d1d;
+        }
+
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #2c3e50, #34495e);
+            overflow: hidden;
+        }
+
+
+        .mine-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://i.imgur.com/L8INoQt.png');
+            background-size: cover;
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+
+        .game-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+
+        .stats-bar {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            z-index: 10;
+        }
+
+
+        .stat {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+
+        .gold {
+            color: #ffd700;
+        }
+
+
+        .timer-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+
+        .timer {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+
+
+        .timer.warning {
+            color: #ff5555;
+            animation: pulse 1s infinite;
+        }
+
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+
+        .character {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: url('https://i.imgur.com/LZPSO99.gif') no-repeat center center;
+            background-size: contain;
+            z-index: 5;
+            transition: bottom 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+
+        .platforms-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+
+        .platform {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: url('https://i.imgur.com/A0C3TAw.png') no-repeat center center;
+            background-size: cover;
+            z-index: 3;
+        }
+
+
+        .gold-nugget {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: url('https://i.imgur.com/JxZjjGV.png') no-repeat center center;
+            background-size: contain;
+            z-index: 4;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+
+        .question-container {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 700px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            transition: opacity 0.3s;
+        }
+
+
+        .question {
+            color: white;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+
+        .option {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+
+
+        .option:hover, .option:focus {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            outline: none;
+        }
+
+
+        .option:active {
+            transform: translateY(0);
+        }
+
+
+        .feedback-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+
+        .popup-content {
+            background: linear-gradient(145deg, #f39c12, #e67e22);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            border: 5px solid white;
+        }
+
+
+        .popup-title {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+
+        .popup-message {
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+
+        .popup-button {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+
+        .popup-button:hover {
+            transform: scale(1.05);
+        }
+
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #2c3e50, #34495e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+
+        .logo {
+            font-size: 4rem;
+            color: #ffd700;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            line-height: 1.2;
+        }
+
+
+        .start-info {
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+
+        .start-button {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+
+        .start-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+
+        .gold-effect {
+            position: absolute;
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 3px black;
+            z-index: 11;
+            pointer-events: none;
+        }
+
+
+        .level-complete {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 101;
+        }
+
+
+        .level-complete-content {
+            background: linear-gradient(145deg, #9b59b6, #8e44ad);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(155, 89, 182, 0.7);
+            border: 5px solid white;
+        }
+
+
+        .level-title {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+
+        .level-message {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+
+        .level-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+
+        .level-stat {
+            text-align: center;
+        }
+
+
+        .level-stat-value {
+            font-size: 2rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+
+        .level-stat-label {
+            color: white;
+            font-size: 1rem;
+        }
+
+
+        .continue-button {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+
+        .continue-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
-
 <body>
-    <h1>Welcome to my ICSpark Final Project Website!</h1>
-    
-    <p>
-        Before you begin working on your final project, take the time to try and think of what you want your final project to be! 
-        This website should be something you're proud of l show it off to your friends and family at the end of the program!
-    </p>
-    
-    <p>
-        This website can be whatever you want, as long as you can make it! Make sure that your idea isn't too big and difficult, but not too small and short either! 
-        If you can't come up with a final website idea, here are a few ideas:
-    </p>
-    
-    <ul>
-        <li><strong>A Personality Quiz</strong> – Make a personality quiz out of your favorite game or show! Use JavaScript to ask questions and decide on what the quiz taker's character is!</li>
-        <li><strong>A Cookie Clicker Game</strong> – Clicking on a picture increases your score, and you can make upgrades to increase your score further! It doesn't have to be a cookie, either! It can be whatever you want, it's your website!</li>
-        <li><strong>Advanced Mad Libs Creator</strong> – If you liked the Mad Libs project from Week 5, you can build onto it by adding more and more scenarios!</li>
-        <li><strong>Wiki</strong> – If you have a favorite game or show you want to make your own wiki about, make it! You can have multiple pages on your website.</li>
-        <li><strong>Choose Your Own Adventure Game</strong> – The website gives the user a scenario and a choice, and each choice will lead them down a new path in a story of your creation!</li>
-        <li><strong>Flashcard Study Website</strong> – Want to test your friends, or help them study for something? Make a website that has interactable flashcards that give the answer when clicked!</li>
-        <li><strong>Trivia Game</strong> – If you have tricky trivia questions to ask about a TV series, a game, or even about yourself, make a trivia website for others to tackle!</li>
-        <li><strong>Whatever You Want!</strong> – It's your website! As long as you believe you can finish it in a couple of weeks, go for it! Your mentors will be there to help you if you ever get stuck!</li>
-    </ul>
+    <div class="game-container">
+        <!-- Background elements -->
+        <div class="mine-background"></div>
+        <div class="game-title">GimKit Gold Mining</div>
+       
+        <!-- Game stats -->
+        <div class="stats-bar">
+            <div class="stat">🏆 Score: <span id="score-display">0</span></div>
+            <div class="stat gold">💰 Gold: <span id="gold-display">0</span></div>
+            <div class="stat">🔼 Level: <span id="level-display">1</span></div>
+        </div>
+       
+        <!-- Timer -->
+        <div class="timer-container">
+            <div class="timer" id="timer-display">Time: 30s</div>
+        </div>
+       
+        <!-- Character -->
+        <div class="character" id="character"></div>
+       
+        <!-- Platforms and gold nuggets -->
+        <div class="platforms-container" id="platforms-container"></div>
+       
+        <!-- Question container -->
+        <div class="question-container" id="question-container">
+            <div class="question" id="question-text"></div>
+            <div class="options-grid" id="options-grid"></div>
+        </div>
+       
+        <!-- Feedback popup -->
+        <div class="feedback-popup" id="feedback-popup">
+            <div class="popup-content">
+                <div class="popup-title" id="popup-title">Correct!</div>
+                <div class="popup-message" id="popup-message"></div>
+                <button class="popup-button" id="continue-button">Continue Mining</button>
+            </div>
+        </div>
+       
+        <!-- Level complete popup -->
+        <div class="level-complete" id="level-complete">
+            <div class="level-complete-content">
+                <div class="level-title">Level Complete!</div>
+                <div class="level-message" id="level-message">You've completed Level 1!</div>
+                <div class="level-stats">
+                    <div class="level-stat">
+                        <div class="level-stat-value" id="level-gold">120</div>
+                        <div class="level-stat-label">Gold Collected</div>
+                    </div>
+                    <div class="level-stat">
+                        <div class="level-stat-value" id="level-score">800</div>
+                        <div class="level-stat-label">Points Earned</div>
+                    </div>
+                </div>
+                <button class="continue-button" id="next-level-button">Next Level</button>
+            </div>
+        </div>
+       
+        <!-- Start screen -->
+        <div class="start-screen" id="start-screen">
+            <div class="logo">GIMKIT<br>GOLD MINING</div>
+            <div class="start-info">Answer trivia questions about movies, games, and TV shows to collect gold and advance through the mine. Each correct answer lets you jump to the next platform!</div>
+            <button class="start-button" id="start-button">START MINING</button>
+        </div>
+    </div>
 
-    <script src="script.js"></script>
-</body>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let gold = 0;
+        let level = 1;
+        let platformsCompleted = 0;
+        let timeLeft = 30;
+        let timer;
+        let levelGoldCollected = 0;
+        let levelScoreEarned = 0;
+        let isJumping = false;
+        let platforms = [];
+        let goldNuggets = [];
+        const platformCount = 8;
+        const platformSpacing = 80;
+       
+        // DOM Elements
+        const scoreDisplay = document.getElementById('score-display');
+        const goldDisplay = document.getElementById('gold-display');
+        const levelDisplay = document.getElementById('level-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const character = document.getElementById('character');
+        const platformsContainer = document.getElementById('platforms-container');
+        const questionContainer = document.getElementById('question-container');
+        const questionText = document.getElementById('question-text');
+        const optionsGrid = document.getElementById('options-grid');
+        const feedbackPopup = document.getElementById('feedback-popup');
+        const popupTitle = document.getElementById('popup-title');
+        const popupMessage = document.getElementById('popup-message');
+        const continueButton = document.getElementById('continue-button');
+        const levelComplete = document.getElementById('level-complete');
+        const levelMessage = document.getElementById('level-message');
+        const levelGold = document.getElementById('level-gold');
+        const levelScore = document.getElementById('level-score');
+        const nextLevelButton = document.getElementById('next-level-button');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+       
+        // Trivia questions focused on movies, games, and TV shows
+        const questions = [
+            {
+                question: "In 'Stranger Things', what is the name of the parallel dimension?",
+                options: ["The Other Side", "The Upside Down", "The Void", "The Shadow Realm"],
+                correctAnswer: 1,
+                explanation: "It's called 'The Upside Down', a dark reflection of the real world."
+            },
+            {
+                question: "Which video game features a protagonist named Joel and a girl named Ellie in a post-apocalyptic world?",
+                options: ["Days Gone", "The Last of Us", "Horizon Zero Dawn", "State of Decay"],
+                correctAnswer: 1,
+                explanation: "The Last of Us follows Joel and Ellie's journey across a post-apocalyptic United States."
+            },
+            {
+                question: "In the Marvel Cinematic Universe, which movie introduced Black Panther?",
+                options: ["Black Panther", "Captain America: Civil War", "Avengers: Age of Ultron", "Iron Man 3"],
+                correctAnswer: 1,
+                explanation: "Black Panther first appeared in 'Captain America: Civil War' before getting his own movie."
+            },
+            {
+                question: "Which game features a character named Kratos seeking revenge against the Greek gods?",
+                options: ["Assassin's Creed Odyssey", "God of War", "Hades", "Immortals Fenyx Rising"],
+                correctAnswer: 1,
+                explanation: "God of War follows Kratos's quest for vengeance against the gods of Olympus."
+            },
+            {
+                question: "What is the name of the fictional continent where Game of Thrones primarily takes place?",
+                options: ["Essos", "Westeros", "Sothoryos", "Ulthos"],
+                correctAnswer: 1,
+                explanation: "Most of Game of Thrones is set in Westeros, with some storylines in Essos."
+            },
+            {
+                question: "In 'The Mandalorian', what species is 'Baby Yoda' (Grogu)?",
+                options: ["Yoda's species", "Mandalorian", "Jawa", "Hutt"],
+                correctAnswer: 0,
+                explanation: "Grogu is the same species as Yoda, though the species has never been officially named."
+            },
+            {
+                question: "Which video game franchise features a character named Master Chief?",
+                options: ["Call of Duty", "Halo", "Gears of War", "Destiny"],
+                correctAnswer: 1,
+                explanation: "Master Chief is the protagonist of the Halo series."
+            },
+            {
+                question: "What was the first Pixar movie?",
+                options: ["Monsters, Inc.", "Finding Nemo", "Toy Story", "A Bug's Life"],
+                correctAnswer: 2,
+                explanation: "Toy Story, released in 1995, was Pixar's first feature film."
+            },
+            {
+                question: "In 'Breaking Bad', what color is the crystal meth produced by Walter White?",
+                options: ["Red", "Yellow", "Blue", "Clear"],
+                correctAnswer: 2,
+                explanation: "Walter's signature product was blue crystal meth, known for its purity."
+            },
+            {
+                question: "Which video game character collects rings and runs at super speed?",
+                options: ["Mario", "Crash Bandicoot", "Sonic the Hedgehog", "Spyro"],
+                correctAnswer: 2,
+                explanation: "Sonic the Hedgehog is known for his super speed and collecting golden rings."
+            },
+            {
+                question: "What is the name of Harry Potter's owl?",
+                options: ["Errol", "Hedwig", "Crookshanks", "Scabbers"],
+                correctAnswer: 1,
+                explanation: "Hedwig is Harry Potter's snowy owl, given to him by Hagrid."
+            },
+            {
+                question: "Which animated movie features a character named WALL-E?",
+                options: ["Finding Nemo", "The Incredibles", "WALL-E", "Up"],
+                correctAnswer: 2,
+                explanation: "WALL-E is the title character of the 2008 Pixar film."
+            },
+            {
+                question: "In 'The Office', what company does Michael Scott work for?",
+                options: ["Staples", "Office Depot", "Dunder Mifflin", "Wernham Hogg"],
+                correctAnswer: 2,
+                explanation: "Michael Scott is the regional manager of Dunder Mifflin's Scranton branch."
+            },
+            {
+                question: "Which video game series features the military group 'FOXHOUND'?",
+                options: ["Call of Duty", "Metal Gear Solid", "Rainbow Six", "Splinter Cell"],
+                correctAnswer: 1,
+                explanation: "FOXHOUND is a special forces unit in the Metal Gear Solid series."
+            },
+            {
+                question: "What is the name of Tony Stark's AI assistant in the Marvel movies?",
+                options: ["FRIDAY", "JARVIS", "EDITH", "KAREN"],
+                correctAnswer: 1,
+                explanation: "JARVIS (Just A Rather Very Intelligent System) is Tony Stark's AI assistant."
+            },
+            {
+                question: "In 'The Legend of Zelda' series, what is the name of the main character you typically play as?",
+                options: ["Zelda", "Link", "Ganon", "Sheik"],
+                correctAnswer: 1,
+                explanation: "Despite the series title, you play as Link, not Princess Zelda."
+            },
+            {
+                question: "Which superhero has the alter ego Bruce Wayne?",
+                options: ["Superman", "Spider-Man", "Batman", "Iron Man"],
+                correctAnswer: 2,
+                explanation: "Bruce Wayne is the billionaire alter ego of Batman."
+            },
+            {
+                question: "What video game company makes the PlayStation?",
+                options: ["Microsoft", "Nintendo", "Sony", "Sega"],
+                correctAnswer: 2,
+                explanation: "Sony is the company behind the PlayStation line of consoles."
+            },
+            {
+                question: "What is the name of the ice princess in Disney's 'Frozen'?",
+                options: ["Anna", "Elsa", "Olaf", "Kristoff"],
+                correctAnswer: 1,
+                explanation: "Elsa is the ice princess with magical powers in 'Frozen'."
+            },
+            {
+                question: "In which movie does Leonardo DiCaprio play Jack Dawson?",
+                options: ["Inception", "The Revenant", "Titanic", "Shutter Island"],
+                correctAnswer: 2,
+                explanation: "Leonardo DiCaprio played Jack Dawson in the 1997 film 'Titanic'."
+            }
+        ];
+       
+        // Initialize game
+        function initGame() {
+            // Set up event listeners
+            startButton.addEventListener('click', startGame);
+            continueButton.addEventListener('click', continueMining);
+            nextLevelButton.addEventListener('click', goToNextLevel);
+           
+            // Position character initially
+            character.style.bottom = '10px';
+        }
+       
+        // Start the game
+        function startGame() {
+            // Hide start screen
+            startScreen.style.display = 'none';
+           
+            // Reset game variables
+            score = 0;
+            gold = 0;
+            level = 1;
+            platformsCompleted = 0;
+            levelGoldCollected = 0;
+            levelScoreEarned = 0;
+           
+            // Update displays
+            updateDisplays();
+           
+            // Create platforms and gold nuggets
+            createPlatformsAndGold();
+           
+            // Load first question
+            loadQuestion();
+        }
+       
+        // Update all stat displays
+        function updateDisplays() {
+            scoreDisplay.textContent = score;
+            goldDisplay.textContent = gold;
+            levelDisplay.textContent = level;
+        }
+       
+        // Create platforms and gold nuggets
+        function createPlatformsAndGold() {
+            // Clear previous platforms
+            platformsContainer.innerHTML = '';
+            platforms = [];
+            goldNuggets = [];
+           
+            // Create new platforms and gold nuggets
+            for (let i = 0; i < platformCount; i++) {
+                // Create platform
+                const platform = document.createElement('div');
+                platform.className = 'platform';
+                platform.style.bottom = `${i * platformSpacing + 10}px`;
+                platformsContainer.appendChild(platform);
+                platforms.push(platform);
+               
+                // Create gold nugget
+                const goldNugget = document.createElement('div');
+                goldNugget.className = 'gold-nugget';
+                goldNugget.style.bottom = `${i * platformSpacing + 50}px`;
+                platformsContainer.appendChild(goldNugget);
+                goldNuggets.push(goldNugget);
+            }
+           
+            // Position character on first platform
+            character.style.bottom = '40px';
+        }
+       
+        // Load a random question
+        function loadQuestion() {
+            // Get random question
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            const question = questions[randomIndex];
+           
+            // Set question text
+            questionText.textContent = question.question;
+           
+            // Create option buttons
+            optionsGrid.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const optionButton = document.createElement('button');
+                optionButton.className = 'option';
+                optionButton.textContent = option;
+                optionButton.dataset.index = index;
+                optionButton.addEventListener('click', () => checkAnswer(index, question.correctAnswer, question.explanation));
+                optionsGrid.appendChild(optionButton);
+            });
+           
+            // Start timer
+            startTimer();
+        }
+       
+        // Start the question timer
+        function startTimer() {
+            // Clear previous timer
+            clearInterval(timer);
+           
+            // Reset time
+            timeLeft = 30;
+            timerDisplay.textContent = `Time: ${timeLeft}s`;
+            timerDisplay.classList.remove('warning');
+           
+            // Start countdown
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time: ${timeLeft}s`;
+               
+                // Warning when time is low
+                if (timeLeft <= 10) {
+                    timerDisplay.classList.add('warning');
+                }
+               
+                // Time's up
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showTimeUp();
+                }
+            }, 1000);
+        }
+       
+        // Show time's up message
+        function showTimeUp() {
+            popupTitle.textContent = "Time's Up!";
+            popupMessage.textContent = "You ran out of time! Try to answer faster.";
+            feedbackPopup.style.display = 'flex';
+        }
+       
+        // Check if answer is correct
+        function checkAnswer(selectedIndex, correctIndex, explanation) {
+            // Stop the timer
+            clearInterval(timer);
+           
+            const isCorrect = selectedIndex === correctIndex;
+           
+            if (isCorrect) {
+                // Handle correct answer
+                popupTitle.textContent = "Correct!";
+                popupMessage.textContent = explanation;
+               
+                // Calculate points (more points for faster answers)
+                const pointsEarned = 100 * level + Math.floor(timeLeft * 3);
+                score += pointsEarned;
+                levelScoreEarned += pointsEarned;
+               
+                // Show correct answer popup
+                feedbackPopup.style.display = 'flex';
+               
+                // Jump to next platform and collect gold
+                platformsCompleted++;
+                jumpToNextPlatform();
+               
+                // Show confetti effect
+                showConfetti();
+               
+                // Check if level completed
+                if (platformsCompleted >= platformCount) {
+                    // Level will be completed after closing popup
+                    continueButton.textContent = "Complete Level";
+                }
+            } else {
+                // Handle incorrect answer
+                popupTitle.textContent = "Incorrect!";
+                popupMessage.textContent = `The correct answer is: ${questions[0].options[correctIndex]}. ${explanation}`;
+                feedbackPopup.style.display = 'flex';
+            }
+           
+            // Update score display
+            updateDisplays();
+        }
+       
+        // Jump character to next platform
+        function jumpToNextPlatform() {
+            if (platformsCompleted <= platformCount) {
+                // Calculate new position
+                const newHeight = (platformsCompleted - 1) * platformSpacing + 40;
+               
+                // Move character
+                character.style.bottom = `${newHeight}px`;
+               
+                // Collect gold nugget
+                setTimeout(() => {
+                    collectGold(platformsCompleted - 1);
+                }, 400);
+            }
+        }
+       
+        // Collect gold nugget
+        function collectGold(nuggetIndex) {
+            if (nuggetIndex >= 0 && nuggetIndex < goldNuggets.length) {
+                const goldNugget = goldNuggets[nuggetIndex];
+               
+                // Only collect if not already collected
+                if (goldNugget.style.opacity !== '0') {
+                    // Hide the nugget
+                    goldNugget.style.opacity = '0';
+                   
+                    // Calculate gold value (increases with level)
+                    const goldValue = 10 * level;
+                    gold += goldValue;
+                    levelGoldCollected += goldValue;
+                   
+                    // Show gold collection effect
+                    showGoldCollectionEffect(goldValue, nuggetIndex);
+                   
+                    // Update gold display
+                    updateDisplays();
+                }
+            }
+        }
+       
+        // Show gold collection effect
+        function showGoldCollectionEffect(value, nuggetIndex) {
+            const effect = document.createElement('div');
+            effect.className = 'gold-effect';
+            effect.textContent = `+${value}`;
+           
+            // Position effect near collected nugget
+            const bottom = (nuggetIndex * platformSpacing + 50);
+            effect.style.bottom = `${bottom}px`;
+            effect.style.left = '50%';
+            effect.style.transform = 'translateX(-50%)';
+           
+            // Add to DOM
+            document.querySelector('.game-container').appendChild(effect);
+           
+            // Animate the effect
+            let pos = bottom;
+            let opacity = 1;
+            const animate = setInterval(() => {
+                pos += 1;
+                opacity -= 0.02;
+                effect.style.bottom = `${pos}px`;
+                effect.style.opacity = opacity;
+               
+                if (opacity <= 0) {
+                    clearInterval(animate);
+                    effect.remove();
+                }
+            }, 20);
+        }
+       
+        // Show confetti effect
+        function showConfetti() {
+            confetti({
+                particle// Show confetti effect
+function showConfetti() {
+    confetti({
+        Count: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+}
+
+
+// Continue mining after answering a question
+function continueMining() {
+    // Hide feedback popup
+    feedbackPopup.style.display = 'none';
+   
+    // Check if level is completed
+    if (platformsCompleted >= platformCount) {
+        showLevelComplete();
+    } else {
+        // Load next question
+        loadQuestion();
+    }
+}
+
+
+// Show level complete screen
+function showLevelComplete() {
+    // Update level complete popup
+    levelMessage.textContent = `You've completed Level ${level}!`;
+    levelGold.textContent = levelGoldCollected;
+    levelScore.textContent = levelScoreEarned;
+   
+    // Show level complete popup
+    levelComplete.style.display = 'flex';
+   
+    // Show big confetti celebration
+    confetti({
+        particleCount: 200,
+        spread: 160,
+        origin: { y: 0.6 },
+        colors: ['#FFD700', '#FFC107', '#FFEB3B']
+    });
+}
+
+
+// Go to next level
+function goToNextLevel() {
+    // Hide level complete popup
+    levelComplete.style.display = 'none';
+   
+    // Increment level
+    level++;
+   
+    // Reset level-specific variables
+    platformsCompleted = 0;
+    levelGoldCollected = 0;
+    levelScoreEarned = 0;
+   
+    // Update displays
+    updateDisplays();
+   
+    // Create new platforms and gold nuggets
+    createPlatformsAndGold();
+   
+    // Load first question of new level
+    loadQuestion();
+}
+
+
+// Initialize game when page loads
+document.addEventListener('DOMContentLoaded', initGame);
+

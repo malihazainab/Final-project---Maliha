@@ -760,6 +760,7 @@
           <div class="stat">🏆 Score: <span id="score-display">0</span></div>
           <div class="stat gold">💰 Gold: <span id="gold-display">0</span></div>
           <div class="stat">🔼 Level: <span id="level-display">1</span></div>
+          <div class="stat">❓ Question: <span id="question-display">1</span>/30</div>
       </div>
    
       <!-- Timer -->
@@ -861,6 +862,7 @@
       let platforms = [];
       let goldNuggets = [];
       let currentQuestion = null;
+      let questionAsked = 1;
       const platformCount = 5; // Reduced from 8 for simplicity
       const platformSpacing = 100; // Increased from 80 for better visibility
    
@@ -889,107 +891,9 @@
       const finalGold = document.getElementById('final-gold');
       const finalScore = document.getElementById('final-score'); 
       const finalLevel = document.getElementById('final-level');
-
+      const playAgainButton = document.getElementById('play-again-button');
+      const questionDisplay = document.getElementById('question-display');
       // Trivia questions focused on movies, games, and TV shows
-      const questionst = [
-          {
-              question: "Q1",
-              options: ["1", "2", "3", "4"],
-              correctAnswer: 1,
-              explanation: "Answer"
-          },
-            {
-                question: "Q2",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q3",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q4",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q5",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q6",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q7",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q8",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q9",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q10",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q11",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q12",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q13",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q14",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q15",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            },
-            {
-                question: "Q16",
-                options: ["1", "2", "3", "4"],
-                correctAnswer: 1,
-                explanation: "Answer"
-            }
-        ]
-
       const questions = [
           {
               question: "In 'Stranger Things', what is the name of the parallel dimension?",
@@ -1092,7 +996,7 @@
                 options: ["Annabelle", "Child's Play", "The Conjuring", "Puppet Master"],
                 correctAnswer: 1,
                 explanation: "Chucky is the main antagonist in the Child's Play franchise, a doll possessed by the spirit of a serial killer."
-           },
+           }
            
       ];
 
@@ -1103,11 +1007,16 @@
           startButton.addEventListener('click', startGame);
           continueButton.addEventListener('click', continueMining);
           nextLevelButton.addEventListener('click', goToNextLevel);
-       
+          playAgainButton.addEventListener('click', restart);  
           // Position character initially
           character.style.bottom = '10px';
       }
    
+      function restart() {
+        gameOver.style.display = 'none';
+        startGame();
+      }
+
       // Start the game
       function startGame() {
           // Hide start screen
@@ -1120,6 +1029,7 @@
           platformsCompleted = 0;
           levelGoldCollected = 0;
           levelScoreEarned = 0;
+          questionAsked = 1;
        
           // Update displays
           updateDisplays();
@@ -1136,6 +1046,7 @@
           scoreDisplay.textContent = score;
           goldDisplay.textContent = gold;
           levelDisplay.textContent = level;
+          questionDisplay.textContent = questionAsked;
       }
    
       // Create platforms and gold nuggets
@@ -1172,7 +1083,8 @@
           // Get random question
           const randomIndex = Math.floor(Math.random() * questions.length);
           currentQuestion = questions[randomIndex];
-
+          questionAsked++;
+          
             // Remove question from available questions
             questions.splice(randomIndex, 1);
 
@@ -1200,7 +1112,7 @@
           clearInterval(timer);
        
           // Reset time
-          timeLeft = 30;
+          timeLeft = 10;
           timerDisplay.textContent = `Time: ${timeLeft}s`;
           timerDisplay.classList.remove('warning');
        
@@ -1369,12 +1281,12 @@
       // Show Game Over screen
       function showGameOver() {
           // Update Game Over popup
-          finalGold.textContent = ;
-          finalLevel.textContent = ;
-          finalScore.textContent = ;
+          finalGold.textContent = levelGoldCollected;
+          finalLevel.textContent = level;
+          finalScore.textContent = levelScoreEarned;
        
           // Show level complete popup
-          levelComplete.style.display = 'flex';
+          gameOver.style.display = 'flex';
        
           // Show big confetti celebration
           confetti({
@@ -1383,7 +1295,12 @@
               origin: { y: 0.6 },
               colors: ['#FFD700', '#FFC107', '#FFEB3B']
           });
+
+          function restartGame() {
+
+          }
       }
+
 
       // Show level complete screen
       function showLevelComplete() {
@@ -1403,33 +1320,7 @@
               colors: ['#FFD700', '#FFC107', '#FFEB3B']
           });
       }
-   
-      // Go to next level
-      function goToNextLevel() {
-          // Hide level complete popup
-          levelComplete.style.display = 'none';
-       
-          // Increment level
-          level++;
-       
-          // Reset level-specific variables
-          platformsCompleted = 0;
-          levelGoldCollected = 0;
-          levelScoreEarned = 0;
-       
-          // Update displays
-          updateDisplays();
-       
-          // Create new platforms and gold nuggets
-          createPlatformsAndGold();
-       
-          // Load first question of new level
-          loadQuestion();
-        
-          // Reset continue button text
-          continueButton.textContent = "Continue Mining";
-      }
-   
+
       // Initialize game when page loads
       document.addEventListener('DOMContentLoaded', initGame);
 
@@ -1440,7 +1331,7 @@
         levelComplete.style.display = 'none';
         
         // Check if there are questions left for the next level
-        if (questions.length === 0) {
+        if (questionAsked == 30) {
             showGameOver();
             return;
         }
@@ -1476,7 +1367,7 @@
             showLevelComplete();
         } else {
             // Check if there are any questions left
-            if (questions.length === 0) {
+            if (questionAsked == 30) {
                 showGameOver();
             } else {
                 // Load next question
@@ -1488,21 +1379,4 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
